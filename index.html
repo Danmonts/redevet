@@ -259,7 +259,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB3EOqVbLMQ50WBdCepWl2LRDz51y2ypsY",
@@ -437,8 +437,19 @@
         
         // Atualiza a variável local
         if(currentUserDataObj) currentUserDataObj.nome = name;
+
+        // Se for veterinário, atualizar automaticamente todos os horários já criados no passado com o novo nome
+        if (currentUserRole === 'veterinario') {
+          const qSlots = query(collection(db, "slots"), where("vetId", "==", auth.currentUser.uid));
+          const snapshot = await getDocs(qSlots);
+          const updatePromises = [];
+          snapshot.forEach(slotDoc => {
+            updatePromises.push(updateDoc(doc(db, "slots", slotDoc.id), { vetName: name }));
+          });
+          await Promise.all(updatePromises);
+        }
         
-        alert("Perfil atualizado com sucesso!");
+        alert("Perfil atualizado com sucesso! Todos os seus horários refletem agora o seu novo nome.");
         document.getElementById('profile-modal').classList.add('hidden');
       } catch(e) {
         alert("Erro ao atualizar o perfil: " + e.message);
