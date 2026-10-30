@@ -26,13 +26,13 @@
 </head>
 <body class="bg-slate-50 text-gray-800 font-sans min-h-screen flex flex-col">
 
-  <!-- Navegação -->
-  <nav class="bg-white border-b border-gray-200 p-4 shadow-sm">
+  <!-- Navegação Fixa e Fina -->
+  <nav class="bg-white border-b border-gray-200 py-2 px-4 shadow-sm sticky top-0 z-40">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
       
-      <!-- Logotipo da Rede Vet -->
-      <div class="flex items-center">
-        <img src="logotipo.png" alt="Rede Vet Logo" class="h-16 sm:h-24 object-contain">
+      <!-- Logotipo da Rede Vet (com tamanho fixo do container e escala visual) -->
+      <div class="flex items-center h-12 sm:h-14">
+        <img src="logotipo.png" alt="Rede Vet Logo" class="h-full object-contain scale-[1.4] sm:scale-[1.7] origin-left">
       </div>
 
       <div id="nav-user" class="hidden flex items-center gap-3">
