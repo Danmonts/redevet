@@ -1,22 +1,3 @@
-As listas de especialidades (tanto no painel do veterinário para publicar, quanto no painel da clínica para pesquisar) já se encontram organizadas em ordem alfabética exata (de A a O) no código anterior.
-
-Aqui está a ordem que está aplicada:
-
-1. **A**nestesiologia
-2. **C**ardiologia
-3. **D**ermatologia
-4. **E**ndocrinologia
-5. **F**isioterapia
-6. **N**efrologia
-7. **N**eurologia
-8. **O**dontologia
-9. **O**ftalmologia
-10. **O**ncologia
-11. **O**rtopedia
-
-Caso não tenha copiado a última versão, aqui está o código completo novamente com as listas suspensas 100% em ordem alfabética:
-
-```html
 <!DOCTYPE html>
 <html lang="pt">
 <head>
@@ -61,8 +42,29 @@ Caso não tenha copiado a última versão, aqui está o código completo novamen
   </nav>
 
   <!-- Área Principal -->
-  <main class="max-w-6xl mx-auto p-6 flex-1 w-full flex flex-col justify-center">
+  <main class="max-w-6xl mx-auto p-6 flex-1 w-full flex flex-col justify-center relative">
     
+    <!-- Modal Editar Perfil -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-slate-900 bg-opacity-50 z-50 flex items-center justify-center">
+      <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-sm m-4">
+        <h3 class="text-xl font-bold text-gray-900 mb-4">Editar Meu Perfil</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">Telefone para Contato</label>
+            <input type="text" id="edit-phone" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none" placeholder="(00) 00000-0000">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">E-mail de Contato</label>
+            <input type="email" id="edit-contact-email" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none" placeholder="contato@email.com">
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button id="btn-close-profile" class="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2.5 rounded-lg transition">Cancelar</button>
+            <button id="btn-save-profile" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 rounded-lg transition">Salvar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Secção de Autenticação -->
     <div id="auth-section" class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-[0_2px_20px_rgba(0,0,0,0.04)] border border-gray-100 w-full my-8">
       <div class="text-center mb-8">
@@ -151,7 +153,12 @@ Caso não tenha copiado a última versão, aqui está o código completo novamen
       
       <!-- Formulário de Publicação em Lote -->
       <div class="col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
-        <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Publicar Disponibilidade</h3>
+        
+        <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
+          <h3 class="text-lg font-bold text-gray-900">Publicar Disponibilidade</h3>
+          <button id="btn-open-profile" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-3 rounded-lg transition shadow-sm border border-slate-200">Meu Perfil</button>
+        </div>
+
         <div class="space-y-4">
           
           <div>
@@ -260,8 +267,9 @@ Caso não tenha copiado a última versão, aqui está o código completo novamen
     const db = getFirestore(app);
 
     let currentUserRole = null;
+    let currentUserDataObj = null;
     let selectedRegistrationRole = 'veterinario';
-    let allAvailableDocs = []; // Armazena todos os horários livres para filtrar na interface da clínica
+    let allAvailableDocs = []; 
 
     // Gestão da Grade de Horários (7h às 20h)
     let selectedHours = [];
@@ -374,14 +382,50 @@ Caso não tenha copiado a última versão, aqui está o código completo novamen
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
-          currentUserRole = userDoc.data().role;
+          currentUserDataObj = userDoc.data();
+          currentUserRole = currentUserDataObj.role;
           updateUI(user, currentUserRole);
-          if(currentUserRole === 'veterinario' && userDoc.data().crm) {
-            document.getElementById('vet-crm-post').value = userDoc.data().crm;
+          
+          if(currentUserRole === 'veterinario') {
+            document.getElementById('vet-crm-post').value = currentUserDataObj.crm || '';
+            document.getElementById('edit-phone').value = currentUserDataObj.telefone || '';
+            document.getElementById('edit-contact-email').value = currentUserDataObj.emailContato || currentUserDataObj.email || '';
           }
         }
       } else {
         updateUI(null, null);
+      }
+    });
+
+    // Lógica do Modal de Perfil
+    document.getElementById('btn-open-profile').addEventListener('click', () => {
+      document.getElementById('profile-modal').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-close-profile').addEventListener('click', () => {
+      document.getElementById('profile-modal').classList.add('hidden');
+    });
+
+    document.getElementById('btn-save-profile').addEventListener('click', async () => {
+      const phone = document.getElementById('edit-phone').value;
+      const contactEmail = document.getElementById('edit-contact-email').value;
+      
+      const btnSave = document.getElementById('btn-save-profile');
+      btnSave.innerText = "A guardar...";
+      btnSave.disabled = true;
+
+      try {
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          telefone: phone,
+          emailContato: contactEmail
+        });
+        alert("Perfil atualizado com sucesso!");
+        document.getElementById('profile-modal').classList.add('hidden');
+      } catch(e) {
+        alert("Erro ao atualizar o perfil: " + e.message);
+      } finally {
+        btnSave.innerText = "Salvar";
+        btnSave.disabled = false;
       }
     });
 
