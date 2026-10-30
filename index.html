@@ -50,6 +50,10 @@
         <h3 class="text-xl font-bold text-gray-900 mb-4">Editar Meu Perfil</h3>
         <div class="space-y-4">
           <div>
+            <label class="block text-sm font-medium text-gray-700">Nome Completo</label>
+            <input type="text" id="edit-name" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none" placeholder="Ex: Dr(a). João Silva">
+          </div>
+          <div>
             <label class="block text-sm font-medium text-gray-700">Telefone para Contato</label>
             <input type="tel" id="edit-phone" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none" placeholder="(00) 00000-0000">
           </div>
@@ -388,6 +392,7 @@
           
           if(currentUserRole === 'veterinario') {
             document.getElementById('vet-crm-post').value = currentUserDataObj.crm || '';
+            document.getElementById('edit-name').value = currentUserDataObj.nome || '';
             document.getElementById('edit-phone').value = currentUserDataObj.telefone || '';
             document.getElementById('edit-contact-email').value = currentUserDataObj.emailContato || currentUserDataObj.email || '';
           }
@@ -403,18 +408,26 @@
     document.getElementById('btn-close-profile').addEventListener('click', () => {
       document.getElementById('profile-modal').classList.add('hidden');
     });
+    
     document.getElementById('btn-save-profile').addEventListener('click', async () => {
+      const name = document.getElementById('edit-name').value;
       const phone = document.getElementById('edit-phone').value;
       const contactEmail = document.getElementById('edit-contact-email').value;
+      
       const btnSave = document.getElementById('btn-save-profile');
       btnSave.innerText = "A guardar...";
       btnSave.disabled = true;
 
       try {
         await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          nome: name,
           telefone: phone,
           emailContato: contactEmail
         });
+        
+        // Atualiza a variável local para usar ao publicar horários novos
+        if(currentUserDataObj) currentUserDataObj.nome = name;
+        
         alert("Perfil atualizado com sucesso!");
         document.getElementById('profile-modal').classList.add('hidden');
       } catch(e) {
@@ -482,6 +495,9 @@
       const specialty = document.getElementById('vet-specialty').value;
       const dateStart = document.getElementById('vet-date-start').value;
       const dateEnd = document.getElementById('vet-date-end').value || dateStart;
+      
+      // Capturar o nome do perfil
+      const vetName = currentUserDataObj?.nome || "Veterinário(a) não identificado";
 
       if(!crm || !specialty || !dateStart || selectedHours.length === 0) {
         return alert("Preencha a especialidade, a data inicial e selecione pelo menos um horário.");
@@ -512,7 +528,9 @@
         datesToGenerate.forEach(date => {
           selectedHours.forEach(time => {
             promises.push(addDoc(collection(db, "slots"), {
-              vetId: auth.currentUser.uid, vetEmail: auth.currentUser.email,
+              vetId: auth.currentUser.uid, 
+              vetEmail: auth.currentUser.email,
+              vetName: vetName,
               crm, specialty, date, time, status: "disponivel"
             }));
           });
@@ -609,9 +627,13 @@
       }
 
       filteredDocs.forEach((data) => {
+        // Usa o nome se estiver preenchido, ou cai de volta para uma mensagem padrão
+        const displayName = data.vetName ? data.vetName : 'Nome não informado';
+
         grid.innerHTML += `
           <div class="border border-gray-100 p-5 sm:p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition">
             <p class="font-bold text-lg sm:text-xl text-gray-900">${data.specialty}</p>
+            <p class="text-sm font-medium text-gray-700 mt-1">${displayName}</p>
             <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">CRM: ${data.crm}</p>
             <div class="bg-slate-50 border border-slate-100 text-slate-700 p-3 rounded-xl text-center font-medium mb-4 sm:mb-5 text-sm sm:text-base">
               ${data.date} • ${data.time}
@@ -647,11 +669,13 @@
         docs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
         docs.forEach((data) => {
+          const displayName = data.vetName ? data.vetName : data.vetEmail;
+          
           grid.innerHTML += `
             <div class="border border-orange-200 p-4 sm:p-5 rounded-2xl bg-orange-50 shadow-sm flex flex-col justify-between">
               <div>
                 <p class="font-bold text-base sm:text-lg text-gray-900">${data.specialty}</p>
-                <p class="text-xs sm:text-sm text-gray-700 mt-1">Prof: ${data.vetEmail} (CRM: ${data.crm})</p>
+                <p class="text-xs sm:text-sm text-gray-700 mt-1">Prof: ${displayName} (CRM: ${data.crm})</p>
                 <p class="text-xs sm:text-sm text-gray-700 mb-3">Clínica: <span class="font-bold text-teal-800">${data.requestedBy}</span></p>
                 <div class="bg-white border border-gray-200 text-slate-700 p-2 rounded-lg text-center font-medium mb-4 text-xs sm:text-sm">
                   ${data.date} às ${data.time}
