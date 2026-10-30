@@ -637,8 +637,8 @@
       }
 
       filteredDocs.forEach((data) => {
-        // Mostra o Nome do Veterinário se existir, senão mostra o E-mail de cadastro
-        const displayName = data.vetName ? data.vetName : data.vetEmail;
+        // Mostra apenas o Nome do Veterinário se existir, senão mostra 'Nome não informado'
+        const displayName = data.vetName ? data.vetName : 'Nome não informado';
 
         grid.innerHTML += `
           <div class="border border-gray-100 p-5 sm:p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition">
@@ -656,7 +656,6 @@
 
     window.requestSlot = async (slotId) => {
       if(confirm("Solicitar este profissional? Nossa equipa entrará em contacto.")) {
-        // Envia o Nome da Clínica também para o Admin ver, se estiver preenchido
         const clinicName = currentUserDataObj?.nome || "";
         
         await updateDoc(doc(db, "slots", slotId), {
@@ -684,7 +683,8 @@
         docs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
 
         docs.forEach((data) => {
-          const vetDisplay = data.vetName ? data.vetName : data.vetEmail;
+          // Mostra apenas o Nome do Veterinário se existir, senão mostra 'Nome não informado'
+          const vetDisplay = data.vetName ? data.vetName : 'Nome não informado';
           const clinicDisplay = data.requestedByName ? data.requestedByName + ` (${data.requestedBy})` : data.requestedBy;
           
           grid.innerHTML += `
