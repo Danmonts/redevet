@@ -18,6 +18,9 @@
     .role-card.active svg {
       stroke: #0f766e;
     }
+    .hour-btn {
+      transition: all 0.15s ease;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-gray-800 font-sans min-h-screen flex flex-col">
@@ -126,39 +129,68 @@
 
     <!-- Painel do Veterinário -->
     <div id="vet-dashboard" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Formulário de Publicação em Lote -->
       <div class="col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
         <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Publicar Disponibilidade</h3>
         <div class="space-y-4">
+          
           <div>
             <label class="block text-sm font-medium text-gray-700">CRM</label>
             <input type="text" id="vet-crm-post" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 bg-gray-50" readonly>
           </div>
+          
           <div>
             <label class="block text-sm font-medium text-gray-700">Especialidade</label>
             <select id="vet-specialty" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
               <option value="">Selecione a Especialidade</option>
-              <option value="Cardiologia">Cardiologia</option>
-              <option value="Ortopedia">Ortopedia</option>
-              <option value="Oncologia">Oncologia</option>
               <option value="Anestesiologia">Anestesiologia</option>
+              <option value="Cardiologia">Cardiologia</option>
               <option value="Dermatologia">Dermatologia</option>
+              <option value="Endocrinologia">Endocrinologia</option>
+              <option value="Fisioterapia">Fisioterapia</option>
+              <option value="Nefrologia">Nefrologia</option>
               <option value="Neurologia">Neurologia</option>
+              <option value="Odontologia">Odontologia</option>
+              <option value="Oftalmologia">Oftalmologia</option>
+              <option value="Oncologia">Oncologia</option>
+              <option value="Ortopedia">Ortopedia</option>
             </select>
           </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Data</label>
-            <input type="date" id="vet-date" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
+          
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700">Data Inicial</label>
+              <input type="date" id="vet-date-start" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 text-xs mt-1">Data Final (Opcional)</label>
+              <input type="date" id="vet-date-end" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
+            </div>
           </div>
+          
           <div>
-            <label class="block text-sm font-medium text-gray-700">Horário</label>
-            <input type="time" id="vet-time" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
+            <div class="flex justify-between items-end mt-2 mb-2">
+              <label class="block text-sm font-medium text-gray-700">Horários (7h às 20h)</label>
+              <div class="space-x-2">
+                <button type="button" id="btn-sel-all" class="text-xs text-teal-600 font-bold hover:underline">Todos</button>
+                <button type="button" id="btn-sel-none" class="text-xs text-gray-500 font-bold hover:underline">Limpar</button>
+              </div>
+            </div>
+            <!-- Grade de Horários Gerada via JS -->
+            <div class="grid grid-cols-4 gap-2" id="hours-container"></div>
           </div>
-          <button id="btn-add-slot" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition mt-2 shadow-sm">Adicionar Horário</button>
+
+          <button id="btn-add-slot" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition mt-2 shadow-sm">
+            Publicar Horários
+          </button>
         </div>
       </div>
+      
+      <!-- Lista de Publicados -->
       <div class="col-span-1 lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Meus Horários Publicados</h3>
-        <div id="vet-slots-list" class="space-y-3"></div>
+        <div id="vet-slots-list" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
       </div>
     </div>
 
@@ -199,6 +231,48 @@
     let currentUserRole = null;
     let selectedRegistrationRole = 'veterinario';
 
+    // Gestão da Grade de Horários (7h às 20h)
+    let selectedHours = [];
+    const hoursList = [];
+    for(let i=7; i<=20; i++) {
+      hoursList.push(`${i.toString().padStart(2, '0')}:00`);
+    }
+
+    function renderHoursGrid() {
+      const container = document.getElementById('hours-container');
+      container.innerHTML = hoursList.map(h => {
+        const isSelected = selectedHours.includes(h);
+        const activeClasses = isSelected ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-sm' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300';
+        return `<button type="button" class="hour-btn border ${activeClasses} py-2 rounded-lg text-sm font-semibold transition" data-time="${h}">${h}</button>`;
+      }).join('');
+      
+      document.querySelectorAll('.hour-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const time = e.target.getAttribute('data-time');
+          if(selectedHours.includes(time)) {
+            selectedHours = selectedHours.filter(t => t !== time);
+          } else {
+            selectedHours.push(time);
+          }
+          renderHoursGrid();
+        });
+      });
+    }
+
+    // Ações Rápidas de Horários
+    document.getElementById('btn-sel-all').addEventListener('click', () => {
+      selectedHours = [...hoursList];
+      renderHoursGrid();
+    });
+    document.getElementById('btn-sel-none').addEventListener('click', () => {
+      selectedHours = [];
+      renderHoursGrid();
+    });
+    
+    // Inicializar Grade
+    renderHoursGrid();
+
+    // Referências DOM
     const ui = {
       authSection: document.getElementById('auth-section'),
       vetDashboard: document.getElementById('vet-dashboard'),
@@ -229,7 +303,6 @@
           ui.vetFields.classList.remove('hidden');
           ui.btnRegister.classList.remove('hidden');
         } else if (selectedRegistrationRole === 'admin') {
-          // Esconde os campos de registro e o botão de criar perfil para o Admin
           ui.clinicaFields.classList.add('hidden');
           ui.vetFields.classList.add('hidden');
           ui.btnRegister.classList.add('hidden');
@@ -284,7 +357,7 @@
       }
     });
 
-    // Registo de Clínicas e Veterinários
+    // Registo
     document.getElementById('btn-register').addEventListener('click', async () => {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -292,7 +365,6 @@
       let crm = "", cnpj = "";
 
       if (!email || !password) return showError("Por favor, preencha o e-mail e a palavra-passe.");
-
       if (role === 'admin') return showError("Não é possível registar contas de administrador por aqui.");
 
       if (role === 'veterinario') {
@@ -314,7 +386,7 @@
       }
     });
 
-    // Login Universal
+    // Login
     document.getElementById('btn-login').addEventListener('click', async () => {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
@@ -322,7 +394,6 @@
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        // O onAuthStateChanged se encarrega de verificar a role real no banco de dados e redirecionar
       } catch (error) {
         showError("Erro ao entrar. Verifique o e-mail e palavra-passe.");
       }
@@ -339,19 +410,70 @@
       ui.error.classList.remove('hidden');
     }
 
-    // Funcionalidades: Veterinário
+    // Funcionalidades: Veterinário - Publicação em Lote
     document.getElementById('btn-add-slot').addEventListener('click', async () => {
       const crm = document.getElementById('vet-crm-post').value;
       const specialty = document.getElementById('vet-specialty').value;
-      const date = document.getElementById('vet-date').value;
-      const time = document.getElementById('vet-time').value;
+      const dateStart = document.getElementById('vet-date-start').value;
+      const dateEnd = document.getElementById('vet-date-end').value || dateStart;
 
-      if(!crm || !specialty || !date || !time) return alert("Preencha todos os campos do horário.");
-      await addDoc(collection(db, "slots"), {
-        vetId: auth.currentUser.uid, vetEmail: auth.currentUser.email,
-        crm, specialty, date, time, status: "disponivel"
-      });
-      alert("Horário publicado com sucesso!");
+      if(!crm || !specialty || !dateStart || selectedHours.length === 0) {
+        return alert("Preencha a especialidade, a data inicial e selecione pelo menos um horário.");
+      }
+
+      if (dateStart > dateEnd) {
+        return alert("A data final não pode ser anterior à data inicial.");
+      }
+
+      const btnAdd = document.getElementById('btn-add-slot');
+      const originalText = btnAdd.innerText;
+      btnAdd.innerText = "A publicar horários...";
+      btnAdd.disabled = true;
+
+      try {
+        // Gerar array com todos os dias do intervalo selecionado
+        const datesToGenerate = [];
+        let curr = new Date(dateStart + "T00:00:00");
+        const endD = new Date(dateEnd + "T00:00:00");
+        
+        while(curr <= endD) {
+           const yyyy = curr.getFullYear();
+           const mm = String(curr.getMonth() + 1).padStart(2, '0');
+           const dd = String(curr.getDate()).padStart(2, '0');
+           datesToGenerate.push(`${yyyy}-${mm}-${dd}`);
+           curr.setDate(curr.getDate() + 1);
+        }
+
+        // Criar as promessas de envio ao Firebase para (Cada Dia x Cada Hora)
+        const promises = [];
+        datesToGenerate.forEach(date => {
+          selectedHours.forEach(time => {
+            promises.push(addDoc(collection(db, "slots"), {
+              vetId: auth.currentUser.uid, 
+              vetEmail: auth.currentUser.email,
+              crm, specialty, date, time, 
+              status: "disponivel"
+            }));
+          });
+        });
+
+        // Aguardar que todos sejam publicados
+        await Promise.all(promises);
+        alert(`${promises.length} horário(s) publicado(s) com sucesso!`);
+        
+        // Limpar o formulário
+        document.getElementById('vet-specialty').value = '';
+        document.getElementById('vet-date-start').value = '';
+        document.getElementById('vet-date-end').value = '';
+        selectedHours = [];
+        renderHoursGrid();
+
+      } catch(e) {
+        alert("Erro ao publicar: " + e.message);
+      } finally {
+        btnAdd.innerText = originalText;
+        btnAdd.disabled = false;
+      }
     });
 
     function loadVetSlots(vetId) {
@@ -359,13 +481,18 @@
       onSnapshot(q, (snapshot) => {
         const list = document.getElementById('vet-slots-list');
         list.innerHTML = '';
-        snapshot.forEach((doc) => {
-          const data = doc.data();
+        
+        // Ordenar os dados por data e hora para melhor visualização
+        const docs = [];
+        snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+        docs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+        docs.forEach((data) => {
           list.innerHTML += `
             <div class="border border-gray-100 p-4 rounded-xl bg-gray-50 flex justify-between items-center transition hover:shadow-sm">
               <div>
-                <p class="font-bold text-teal-800 text-lg">${data.specialty} <span class="text-sm text-gray-500">(${data.crm})</span></p>
-                <p class="text-gray-700 mt-1">${data.date} às ${data.time}</p>
+                <p class="font-bold text-teal-800 text-sm">${data.specialty}</p>
+                <p class="text-gray-700 mt-1 font-medium">${data.date} <span class="text-gray-400">às</span> ${data.time}</p>
                 <p class="text-xs mt-2 font-bold uppercase ${data.status === 'disponivel' ? 'text-teal-600 bg-teal-50' : 'text-orange-600 bg-orange-50'} px-2 py-1 rounded w-fit">
                   ${data.status.replace('_', ' ')}
                 </p>
@@ -382,8 +509,12 @@
       onSnapshot(q, (snapshot) => {
         const grid = document.getElementById('available-slots-grid');
         grid.innerHTML = '';
-        snapshot.forEach((doc) => {
-          const data = doc.data();
+        
+        const docs = [];
+        snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+        docs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+        docs.forEach((data) => {
           grid.innerHTML += `
             <div class="border border-gray-100 p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition">
               <p class="font-bold text-xl text-gray-900">${data.specialty}</p>
@@ -391,7 +522,7 @@
               <div class="bg-slate-50 border border-slate-100 text-slate-700 p-3 rounded-xl text-center font-medium mb-5">
                 ${data.date} • ${data.time}
               </div>
-              <button onclick="requestSlot('${doc.id}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition">Solicitar Especialista</button>
+              <button onclick="requestSlot('${data.id}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition">Solicitar Especialista</button>
             </div>
           `;
         });
@@ -417,19 +548,25 @@
           grid.innerHTML = '<p class="text-gray-500 col-span-3">Nenhum agendamento pendente de aprovação.</p>';
           return;
         }
-        snapshot.forEach((doc) => {
-          const data = doc.data();
+        
+        const docs = [];
+        snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+        docs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+
+        docs.forEach((data) => {
           grid.innerHTML += `
-            <div class="border border-orange-200 p-5 rounded-2xl bg-orange-50 shadow-sm">
-              <p class="font-bold text-lg text-gray-900">${data.specialty}</p>
-              <p class="text-sm text-gray-700">Profissional: ${data.vetEmail} (CRM: ${data.crm})</p>
-              <p class="text-sm text-gray-700 mb-3">Clínica: <span class="font-bold text-teal-800">${data.requestedBy}</span></p>
-              <div class="bg-white border border-gray-200 text-slate-700 p-2 rounded-lg text-center font-medium mb-4">
-                Data: ${data.date} às ${data.time}
+            <div class="border border-orange-200 p-5 rounded-2xl bg-orange-50 shadow-sm flex flex-col justify-between">
+              <div>
+                <p class="font-bold text-lg text-gray-900">${data.specialty}</p>
+                <p class="text-sm text-gray-700">Profissional: ${data.vetEmail} (CRM: ${data.crm})</p>
+                <p class="text-sm text-gray-700 mb-3">Clínica: <span class="font-bold text-teal-800">${data.requestedBy}</span></p>
+                <div class="bg-white border border-gray-200 text-slate-700 p-2 rounded-lg text-center font-medium mb-4">
+                  Data: ${data.date} às ${data.time}
+                </div>
               </div>
               <div class="flex gap-2">
-                <button onclick="approveSlot('${doc.id}')" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg transition">Confirmar</button>
-                <button onclick="rejectSlot('${doc.id}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition">Cancelar</button>
+                <button onclick="approveSlot('${data.id}')" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg transition">Confirmar</button>
+                <button onclick="rejectSlot('${data.id}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition">Cancelar</button>
               </div>
             </div>
           `;
