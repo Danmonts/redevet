@@ -250,7 +250,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB3EOqVbLMQ50WBdCepWl2LRDz51y2ypsY",
@@ -559,11 +559,26 @@
                   ${data.status.replace('_', ' ')}
                 </p>
               </div>
+              <button onclick="deleteSlot('${data.id}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition" title="Excluir horário">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
             </div>
           `;
         });
       });
     }
+
+    window.deleteSlot = async (slotId) => {
+      if(confirm("Tem a certeza que pretende excluir este horário da plataforma? Esta ação não pode ser desfeita.")) {
+        try {
+          await deleteDoc(doc(db, "slots", slotId));
+        } catch (e) {
+          alert("Erro ao excluir: " + e.message);
+        }
+      }
+    };
 
     // Funcionalidades: Clínica e Filtros
     document.getElementById('btn-search').addEventListener('click', renderAvailableSlots);
