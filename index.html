@@ -6,15 +6,14 @@
   <title>VetConnect - Plataforma</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    /* Estilos extra para os cartões de seleção */
     .role-card {
       transition: all 0.2s ease;
       cursor: pointer;
     }
     .role-card.active {
-      border-color: #0d9488; /* teal-600 */
-      background-color: #f0fdfa; /* teal-50 */
-      color: #0f766e; /* teal-700 */
+      border-color: #0d9488;
+      background-color: #f0fdfa;
+      color: #0f766e;
     }
     .role-card.active svg {
       stroke: #0f766e;
@@ -27,7 +26,6 @@
   <nav class="bg-white border-b border-gray-200 p-4 shadow-sm">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2 text-teal-700 font-bold text-xl">
-        <!-- Ícone do Logo -->
         <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
         </svg>
@@ -62,12 +60,11 @@
         </div>
       </div>
 
-      <!-- Tipo de Conta (Para Registo) -->
+      <!-- Tipo de Conta -->
       <div class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Eu sou... (Apenas para criar conta)</label>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Eu sou...</label>
         <div class="space-y-3">
           
-          <!-- Card Veterinário -->
           <div class="role-card active border border-gray-200 rounded-lg p-3.5 flex items-center gap-3" data-role="veterinario">
             <div class="bg-gray-100 p-2 rounded-md">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -77,7 +74,6 @@
             <span class="font-medium text-gray-700">Veterinário(a) Especialista</span>
           </div>
 
-          <!-- Card Clínica -->
           <div class="role-card border border-gray-200 rounded-lg p-3.5 flex items-center gap-3" data-role="clinica">
             <div class="bg-gray-100 p-2 rounded-md">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -87,38 +83,56 @@
             <span class="font-medium text-gray-700">Clínica Veterinária</span>
           </div>
 
+          <div class="role-card border border-gray-200 rounded-lg p-3.5 flex items-center gap-3" data-role="admin">
+            <div class="bg-gray-100 p-2 rounded-md">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+            </div>
+            <span class="font-medium text-gray-700">Admin da Plataforma</span>
+          </div>
+
         </div>
       </div>
 
       <!-- Campos Dinâmicos para Registo -->
       <div id="vet-fields" class="mb-6">
-        <label class="block text-sm font-medium text-gray-700 mb-1">CRMV</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">CRMV (Apenas para criar conta)</label>
         <input type="text" id="reg-crm" placeholder="Ex: CRMV-SP 12345" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition">
       </div>
 
       <div id="clinica-fields" class="mb-6 hidden">
-        <label class="block text-sm font-medium text-gray-700 mb-1">CNPJ da Clínica</label>
+        <label class="block text-sm font-medium text-gray-700 mb-1">CNPJ da Clínica (Apenas para criar conta)</label>
         <input type="text" id="reg-cnpj" placeholder="Ex: 00.000.000/0000-00" class="w-full border border-gray-300 rounded-lg p-2.5 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 outline-none transition">
       </div>
       
       <div class="flex flex-col gap-3">
-        <button id="btn-login" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition shadow-sm">Já tenho conta (Entrar)</button>
+        <button id="btn-login" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-lg transition shadow-sm">Entrar na Plataforma</button>
         <button id="btn-register" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-4 rounded-lg transition shadow-sm">Criar meu perfil</button>
       </div>
       <p id="auth-error" class="text-red-500 text-sm mt-4 hidden text-center bg-red-50 p-2 rounded-lg"></p>
+    </div>
+
+    <!-- Painel do Admin -->
+    <div id="admin-dashboard" class="hidden">
+      <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 mb-6">
+        <h3 class="text-xl font-bold text-gray-900 border-b border-gray-100 pb-3">Painel de Administração - Solicitações Pendentes</h3>
+        <p class="text-sm text-gray-500 mt-2">Faça a intermediação e confirme os agendamentos entre Clínicas e Profissionais.</p>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="admin-slots-grid">
+        <!-- Solicitações pendentes aparecerão aqui -->
+      </div>
     </div>
 
     <!-- Painel do Veterinário -->
     <div id="vet-dashboard" class="hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div class="col-span-1 bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
         <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Publicar Disponibilidade</h3>
-        
         <div class="space-y-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">CRM</label>
             <input type="text" id="vet-crm-post" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 bg-gray-50" readonly>
           </div>
-          
           <div>
             <label class="block text-sm font-medium text-gray-700">Especialidade</label>
             <select id="vet-specialty" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
@@ -131,26 +145,20 @@
               <option value="Neurologia">Neurologia</option>
             </select>
           </div>
-          
           <div>
             <label class="block text-sm font-medium text-gray-700">Data</label>
             <input type="date" id="vet-date" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
           </div>
-          
           <div>
             <label class="block text-sm font-medium text-gray-700">Horário</label>
             <input type="time" id="vet-time" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none">
           </div>
-          
           <button id="btn-add-slot" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition mt-2 shadow-sm">Adicionar Horário</button>
         </div>
       </div>
-      
       <div class="col-span-1 lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
         <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Meus Horários Publicados</h3>
-        <div id="vet-slots-list" class="space-y-3">
-          <!-- Os horários do veterinário aparecerão aqui -->
-        </div>
+        <div id="vet-slots-list" class="space-y-3"></div>
       </div>
     </div>
 
@@ -164,10 +172,7 @@
           <button id="btn-search" class="bg-slate-800 text-white font-bold py-2.5 rounded-lg hover:bg-slate-900 transition">Filtrar Resultados</button>
         </div>
       </div>
-      
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="available-slots-grid">
-        <!-- Os cards de horários disponíveis aparecerão aqui -->
-      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="available-slots-grid"></div>
     </div>
 
   </main>
@@ -177,7 +182,6 @@
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    // As suas chaves do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyB3EOqVbLMQ50WBdCepWl2LRDz51y2ypsY",
       authDomain: "rede-vet.firebaseapp.com",
@@ -193,78 +197,84 @@
     const db = getFirestore(app);
 
     let currentUserRole = null;
-    let selectedRegistrationRole = 'veterinario'; // Default
+    let selectedRegistrationRole = 'veterinario';
 
-    // Referências DOM
     const ui = {
       authSection: document.getElementById('auth-section'),
       vetDashboard: document.getElementById('vet-dashboard'),
       clinicDashboard: document.getElementById('clinic-dashboard'),
+      adminDashboard: document.getElementById('admin-dashboard'),
       navUser: document.getElementById('nav-user'),
       userInfo: document.getElementById('user-info'),
       error: document.getElementById('auth-error'),
       clinicaFields: document.getElementById('clinica-fields'),
       vetFields: document.getElementById('vet-fields'),
+      btnRegister: document.getElementById('btn-register'),
       roleCards: document.querySelectorAll('.role-card')
     };
 
-    // Lógica visual dos cartões de seleção (Role Cards)
+    // Alternância de abas/cartões na tela de login
     ui.roleCards.forEach(card => {
       card.addEventListener('click', () => {
-        // Remover classe active de todos
         ui.roleCards.forEach(c => c.classList.remove('active'));
-        // Adicionar active ao clicado
         card.classList.add('active');
-        // Atualizar variável
         selectedRegistrationRole = card.getAttribute('data-role');
         
-        // Alternar campos dinâmicos
         if (selectedRegistrationRole === 'clinica') {
           ui.clinicaFields.classList.remove('hidden');
           ui.vetFields.classList.add('hidden');
-        } else {
+          ui.btnRegister.classList.remove('hidden');
+        } else if (selectedRegistrationRole === 'veterinario') {
           ui.clinicaFields.classList.add('hidden');
           ui.vetFields.classList.remove('hidden');
+          ui.btnRegister.classList.remove('hidden');
+        } else if (selectedRegistrationRole === 'admin') {
+          // Esconde os campos de registro e o botão de criar perfil para o Admin
+          ui.clinicaFields.classList.add('hidden');
+          ui.vetFields.classList.add('hidden');
+          ui.btnRegister.classList.add('hidden');
         }
       });
     });
 
-    // Função para alterar a interface consoante o utilizador logado
     function updateUI(user, role) {
       ui.error.classList.add('hidden');
       if (user) {
         ui.authSection.classList.add('hidden');
         ui.navUser.classList.remove('hidden');
         
-        const roleText = role === 'veterinario' ? 'Veterinário' : 'Clínica';
+        let roleText = role === 'veterinario' ? 'Veterinário' : (role === 'clinica' ? 'Clínica' : 'Administrador');
         ui.userInfo.innerText = `${user.email} (${roleText})`;
         
+        ui.vetDashboard.classList.add('hidden');
+        ui.clinicDashboard.classList.add('hidden');
+        ui.adminDashboard.classList.add('hidden');
+
         if (role === 'veterinario') {
           ui.vetDashboard.classList.remove('hidden');
-          ui.clinicDashboard.classList.add('hidden');
           loadVetSlots(user.uid);
-        } else {
+        } else if (role === 'clinica') {
           ui.clinicDashboard.classList.remove('hidden');
-          ui.vetDashboard.classList.add('hidden');
           loadAllAvailableSlots();
+        } else if (role === 'admin') {
+          ui.adminDashboard.classList.remove('hidden');
+          loadAdminSlots();
         }
       } else {
         ui.authSection.classList.remove('hidden');
         ui.navUser.classList.add('hidden');
         ui.vetDashboard.classList.add('hidden');
         ui.clinicDashboard.classList.add('hidden');
+        ui.adminDashboard.classList.add('hidden');
       }
     }
 
-    // Monitorizar o estado da Autenticação
     onAuthStateChanged(auth, async (user) => {
       if (user) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists()) {
           currentUserRole = userDoc.data().role;
           updateUI(user, currentUserRole);
-          
-          // Preencher automaticamente o CRM no painel se for veterinário
           if(currentUserRole === 'veterinario' && userDoc.data().crm) {
             document.getElementById('vet-crm-post').value = userDoc.data().crm;
           }
@@ -274,81 +284,62 @@
       }
     });
 
-    // Registo de novo utilizador
+    // Registo de Clínicas e Veterinários
     document.getElementById('btn-register').addEventListener('click', async () => {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
       const role = selectedRegistrationRole;
-      
-      let crm = "";
-      let cnpj = "";
+      let crm = "", cnpj = "";
 
-      // Validações
-      if (!email || !password) {
-        ui.error.innerText = "Por favor, preencha o e-mail e a palavra-passe.";
-        ui.error.classList.remove('hidden');
-        return;
-      }
+      if (!email || !password) return showError("Por favor, preencha o e-mail e a palavra-passe.");
+
+      if (role === 'admin') return showError("Não é possível registar contas de administrador por aqui.");
 
       if (role === 'veterinario') {
         crm = document.getElementById('reg-crm').value;
-        if (!crm) {
-          ui.error.innerText = "Por favor, preencha o CRM para registar como Médico Veterinário.";
-          ui.error.classList.remove('hidden');
-          return;
-        }
+        if (!crm) return showError("Preencha o CRM para registar como Médico Veterinário.");
       } else if (role === 'clinica') {
         cnpj = document.getElementById('reg-cnpj').value;
-        if (!cnpj) {
-          ui.error.innerText = "Por favor, preencha o CNPJ para registar como Clínica Veterinária.";
-          ui.error.classList.remove('hidden');
-          return;
-        }
+        if (!cnpj) return showError("Preencha o CNPJ para registar como Clínica Veterinária.");
       }
       
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
         const userData = { role: role, email: email };
         if (role === 'veterinario') userData.crm = crm;
         if (role === 'clinica') userData.cnpj = cnpj;
-
         await setDoc(doc(db, "users", userCredential.user.uid), userData);
       } catch (error) {
-        ui.error.innerText = "Erro ao registar: " + error.message;
-        ui.error.classList.remove('hidden');
+        showError("Erro ao registar: " + error.message);
       }
     });
 
-    // Início de sessão (Login)
+    // Login Universal
     document.getElementById('btn-login').addEventListener('click', async () => {
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
-      
-      if (!email || !password) {
-        ui.error.innerText = "Por favor, preencha o e-mail e a palavra-passe para entrar.";
-        ui.error.classList.remove('hidden');
-        return;
-      }
+      if (!email || !password) return showError("Preencha o e-mail e a palavra-passe para entrar.");
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
+        // O onAuthStateChanged se encarrega de verificar a role real no banco de dados e redirecionar
       } catch (error) {
-        ui.error.innerText = "Erro ao entrar. Verifique o e-mail e palavra-passe.";
-        ui.error.classList.remove('hidden');
+        showError("Erro ao entrar. Verifique o e-mail e palavra-passe.");
       }
     });
 
-    // Terminar sessão (Logout)
     document.getElementById('btn-logout').addEventListener('click', () => {
       signOut(auth);
       document.getElementById('email').value = '';
       document.getElementById('password').value = '';
-      document.getElementById('reg-cnpj').value = '';
-      document.getElementById('reg-crm').value = '';
     });
 
-    // Veterinário: Adicionar horário
+    function showError(msg) {
+      ui.error.innerText = msg;
+      ui.error.classList.remove('hidden');
+    }
+
+    // Funcionalidades: Veterinário
     document.getElementById('btn-add-slot').addEventListener('click', async () => {
       const crm = document.getElementById('vet-crm-post').value;
       const specialty = document.getElementById('vet-specialty').value;
@@ -356,21 +347,13 @@
       const time = document.getElementById('vet-time').value;
 
       if(!crm || !specialty || !date || !time) return alert("Preencha todos os campos do horário.");
-
       await addDoc(collection(db, "slots"), {
-        vetId: auth.currentUser.uid,
-        vetEmail: auth.currentUser.email,
-        crm, specialty, date, time,
-        status: "disponivel"
+        vetId: auth.currentUser.uid, vetEmail: auth.currentUser.email,
+        crm, specialty, date, time, status: "disponivel"
       });
-      alert("Horário publicado com sucesso na plataforma!");
-      
-      document.getElementById('vet-specialty').value = '';
-      document.getElementById('vet-date').value = '';
-      document.getElementById('vet-time').value = '';
+      alert("Horário publicado com sucesso!");
     });
 
-    // Carregar horários do veterinário em tempo real
     function loadVetSlots(vetId) {
       const q = query(collection(db, "slots"), where("vetId", "==", vetId));
       onSnapshot(q, (snapshot) => {
@@ -381,12 +364,9 @@
           list.innerHTML += `
             <div class="border border-gray-100 p-4 rounded-xl bg-gray-50 flex justify-between items-center transition hover:shadow-sm">
               <div>
-                <p class="font-bold text-teal-800 text-lg">${data.specialty} <span class="text-sm font-normal text-gray-500">(${data.crm})</span></p>
-                <p class="text-gray-700 flex items-center gap-1 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  ${data.date} às ${data.time}
-                </p>
-                <p class="text-xs mt-2 font-bold uppercase tracking-wider ${data.status === 'disponivel' ? 'text-teal-600 bg-teal-50 px-2 py-1 rounded w-fit' : 'text-orange-600 bg-orange-50 px-2 py-1 rounded w-fit'}">
+                <p class="font-bold text-teal-800 text-lg">${data.specialty} <span class="text-sm text-gray-500">(${data.crm})</span></p>
+                <p class="text-gray-700 mt-1">${data.date} às ${data.time}</p>
+                <p class="text-xs mt-2 font-bold uppercase ${data.status === 'disponivel' ? 'text-teal-600 bg-teal-50' : 'text-orange-600 bg-orange-50'} px-2 py-1 rounded w-fit">
                   ${data.status.replace('_', ' ')}
                 </p>
               </div>
@@ -396,7 +376,7 @@
       });
     }
 
-    // Carregar todos os horários disponíveis para as clínicas
+    // Funcionalidades: Clínica
     function loadAllAvailableSlots() {
       const q = query(collection(db, "slots"), where("status", "==", "disponivel"));
       onSnapshot(q, (snapshot) => {
@@ -406,35 +386,65 @@
           const data = doc.data();
           grid.innerHTML += `
             <div class="border border-gray-100 p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition">
-              <div class="flex items-center gap-3 mb-3">
-                <div class="bg-teal-50 p-2 rounded-lg">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                </div>
-                <div>
-                  <p class="font-bold text-xl text-gray-900">${data.specialty}</p>
-                  <p class="text-xs font-medium text-gray-500 uppercase tracking-wider">CRM: ${data.crm}</p>
-                </div>
-              </div>
-              
-              <div class="bg-slate-50 border border-slate-100 text-slate-700 p-3 rounded-xl flex items-center justify-center gap-2 font-medium mb-5">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+              <p class="font-bold text-xl text-gray-900">${data.specialty}</p>
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">CRM: ${data.crm}</p>
+              <div class="bg-slate-50 border border-slate-100 text-slate-700 p-3 rounded-xl text-center font-medium mb-5">
                 ${data.date} • ${data.time}
               </div>
-              <button onclick="requestSlot('${doc.id}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition shadow-sm">Solicitar Especialista</button>
+              <button onclick="requestSlot('${doc.id}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl transition">Solicitar Especialista</button>
             </div>
           `;
         });
       });
     }
 
-    // Função global para a clínica solicitar um horário
     window.requestSlot = async (slotId) => {
-      if(confirm("Pretende solicitar este profissional? A nossa equipa entrará em contacto para confirmar o agendamento.")) {
+      if(confirm("Pretende solicitar este profissional? A nossa equipa entrará em contacto para confirmar.")) {
         await updateDoc(doc(db, "slots", slotId), {
-          status: "pendente_aprovacao",
-          requestedBy: auth.currentUser.email
+          status: "pendente_aprovacao", requestedBy: auth.currentUser.email
         });
-        alert("Solicitação enviada! Aguarde a confirmação da plataforma VetConnect.");
+        alert("Solicitação enviada ao administrador!");
+      }
+    };
+
+    // Funcionalidades: Admin
+    function loadAdminSlots() {
+      const q = query(collection(db, "slots"), where("status", "==", "pendente_aprovacao"));
+      onSnapshot(q, (snapshot) => {
+        const grid = document.getElementById('admin-slots-grid');
+        grid.innerHTML = '';
+        if (snapshot.empty) {
+          grid.innerHTML = '<p class="text-gray-500 col-span-3">Nenhum agendamento pendente de aprovação.</p>';
+          return;
+        }
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          grid.innerHTML += `
+            <div class="border border-orange-200 p-5 rounded-2xl bg-orange-50 shadow-sm">
+              <p class="font-bold text-lg text-gray-900">${data.specialty}</p>
+              <p class="text-sm text-gray-700">Profissional: ${data.vetEmail} (CRM: ${data.crm})</p>
+              <p class="text-sm text-gray-700 mb-3">Clínica: <span class="font-bold text-teal-800">${data.requestedBy}</span></p>
+              <div class="bg-white border border-gray-200 text-slate-700 p-2 rounded-lg text-center font-medium mb-4">
+                Data: ${data.date} às ${data.time}
+              </div>
+              <div class="flex gap-2">
+                <button onclick="approveSlot('${doc.id}')" class="flex-1 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 rounded-lg transition">Confirmar</button>
+                <button onclick="rejectSlot('${doc.id}')" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-2 rounded-lg transition">Cancelar</button>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+
+    window.approveSlot = async (slotId) => {
+      if(confirm("Confirmar este agendamento definitivamente?")) {
+        await updateDoc(doc(db, "slots", slotId), { status: "agendamento_confirmado" });
+      }
+    };
+    window.rejectSlot = async (slotId) => {
+      if(confirm("Cancelar solicitação e devolver horário para a clínica?")) {
+        await updateDoc(doc(db, "slots", slotId), { status: "disponivel", requestedBy: null });
       }
     };
   </script>
