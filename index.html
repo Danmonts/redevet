@@ -530,10 +530,32 @@
         
         const docs = [];
         snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
+        
+        // Nova Lógica de Ordenação por Prioridade
         docs.sort((a, b) => {
-           // Ordenar primeiro pela data, depois colocar os agendamentos no topo
-           if (a.date !== b.date) return a.date.localeCompare(b.date);
-           return (a.isAppointment === b.isAppointment) ? 0 : a.isAppointment ? -1 : 1;
+            const getPriority = (item) => {
+                if (item.status === 'agendamento_confirmado') return 1; // Prioridade Máxima
+                if (item.isAppointment) return 2; // Pendente de aprovação
+                return 3; // Dia Livre (disponível)
+            };
+
+            const priorityA = getPriority(a);
+            const priorityB = getPriority(b);
+
+            // 1. Ordena pela prioridade (Confirmados no topo)
+            if (priorityA !== priorityB) {
+                return priorityA - priorityB;
+            }
+
+            // 2. Se a prioridade for igual, ordena por Data
+            if (a.date !== b.date) {
+                return a.date.localeCompare(b.date);
+            }
+
+            // 3. Se a data for igual, ordena por Hora (se existir)
+            const timeA = a.requestedTime || "";
+            const timeB = b.requestedTime || "";
+            return timeA.localeCompare(timeB);
         });
 
         docs.forEach((data) => {
@@ -689,6 +711,7 @@
           const vetDisplay = data.vetName ? data.vetName : 'Nome não informado';
           const clinicDisplay = data.requestedByName ? data.requestedByName + ` (${data.requestedBy})` : data.requestedBy;
           
+          // Exibe o horário solicitado pela clínica
           const timeDisplay = data.requestedTime ? ` às ${data.requestedTime}` : '';
 
           grid.innerHTML += `
