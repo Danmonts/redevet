@@ -530,22 +530,31 @@
         
         const docs = [];
         snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
-        docs.sort((a, b) => a.date.localeCompare(b.date));
+        docs.sort((a, b) => {
+           // Ordenar primeiro pela data, depois colocar os agendamentos no topo
+           if (a.date !== b.date) return a.date.localeCompare(b.date);
+           return (a.isAppointment === b.isAppointment) ? 0 : a.isAppointment ? -1 : 1;
+        });
 
         docs.forEach((data) => {
-          // Se já houver um horário solicitado pela clínica, mostra-o
-          const timeDisplay = data.requestedTime ? ` <span class="text-gray-400">às</span> <span class="font-bold text-teal-700">${data.requestedTime}</span>` : '';
-          
+          const isAppointment = data.isAppointment === true;
+          const timeDisplay = isAppointment && data.requestedTime ? ` <span class="text-gray-400">às</span> <span class="font-bold text-teal-700">${data.requestedTime}</span>` : '';
+          const titleDisplay = isAppointment ? `${data.specialty} (Horário Solicitado)` : `${data.specialty} (Dia Livre)`;
+          const badgeClass = isAppointment 
+              ? (data.status === 'agendamento_confirmado' ? 'text-teal-700 bg-teal-100' : 'text-orange-600 bg-orange-100')
+              : 'text-gray-600 bg-gray-200';
+          const statusText = isAppointment ? data.status.replace('_', ' ') : 'Dia Livre na Plataforma';
+
           list.innerHTML += `
-            <div class="border border-gray-100 p-3 sm:p-4 rounded-xl bg-gray-50 flex justify-between items-center transition hover:shadow-sm">
+            <div class="border border-gray-100 p-3 sm:p-4 rounded-xl ${isAppointment ? 'bg-white shadow-sm border-l-4 border-l-teal-500' : 'bg-gray-50'} flex justify-between items-center transition hover:shadow-md">
               <div>
-                <p class="font-bold text-teal-800 text-sm">${data.specialty}</p>
+                <p class="font-bold text-teal-800 text-sm">${titleDisplay}</p>
                 <p class="text-gray-700 mt-1 font-medium text-sm">${data.date}${timeDisplay}</p>
-                <p class="text-xs mt-2 font-bold uppercase ${data.status === 'disponivel' ? 'text-teal-600 bg-teal-50' : 'text-orange-600 bg-orange-50'} px-2 py-1 rounded w-fit">
-                  ${data.status.replace('_', ' ')}
+                <p class="text-xs mt-2 font-bold uppercase ${badgeClass} px-2 py-1 rounded w-fit">
+                  ${statusText}
                 </p>
               </div>
-              <button onclick="deleteSlot('${data.id}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-lg transition" title="Excluir data">
+              <button onclick="deleteSlot('${data.id}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-lg transition" title="Excluir">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
@@ -557,7 +566,7 @@
     }
 
     window.deleteSlot = async (slotId) => {
-      if(confirm("Deseja excluir esta data? A ação não pode ser desfeita.")) {
+      if(confirm("Deseja excluir este item? Se for um 'Dia Livre', ele sairá da plataforma. Se for um 'Horário Marcado', a reserva será desfeita.")) {
         try {
           await deleteDoc(doc(db, "slots", slotId));
         } catch (e) {
@@ -570,10 +579,17 @@
     document.getElementById('btn-search').addEventListener('click', renderAvailableSlots);
 
     function loadAllAvailableSlots() {
+      // Clínicas só pesquisam dias inteiros disponíveis que NÃO são "isAppointment" (ou seja, os dias originais)
       const q = query(collection(db, "slots"), where("status", "==", "disponivel"));
       onSnapshot(q, (snapshot) => {
         allAvailableDocs = [];
-        snapshot.forEach(doc => allAvailableDocs.push({ id: doc.id, ...doc.data() }));
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            // Evitar que apareçam reservas perdidas ou em estados anormais
+            if (!data.isAppointment) {
+                allAvailableDocs.push({ id: doc.id, ...data });
+            }
+        });
         renderAvailableSlots();
       });
     }
@@ -618,19 +634,39 @@
     }
 
     window.requestSlot = async (slotId) => {
-      // Nova etapa: A clínica escolhe o horário desejado
       const desiredTime = prompt("Qual horário deseja solicitar para este dia? (Ex: 14:30)");
       
       if (desiredTime && desiredTime.trim() !== "") {
         const clinicName = currentUserDataObj?.nome || "";
         
-        await updateDoc(doc(db, "slots", slotId), {
-          status: "pendente_aprovacao", 
-          requestedBy: auth.currentUser.email,
-          requestedByName: clinicName,
-          requestedTime: desiredTime // Salva o horário proposto pela clínica
-        });
-        alert("Solicitação de horário enviada ao administrador!");
+        try {
+            // Ir buscar os dados do dia disponível
+            const slotRef = doc(db, "slots", slotId);
+            const slotSnap = await getDoc(slotRef);
+
+            if (slotSnap.exists()) {
+                const slotData = slotSnap.data();
+
+                // Criar um novo agendamento independente
+                await addDoc(collection(db, "slots"), {
+                    vetId: slotData.vetId,
+                    vetEmail: slotData.vetEmail,
+                    vetName: slotData.vetName,
+                    crm: slotData.crm,
+                    specialty: slotData.specialty,
+                    date: slotData.date,
+                    status: "pendente_aprovacao",
+                    requestedBy: auth.currentUser.email,
+                    requestedByName: clinicName,
+                    requestedTime: desiredTime,
+                    isAppointment: true // Flag importante para diferenciar do dia livre
+                });
+
+                alert("Solicitação de horário enviada ao administrador! A data original continua disponível para outras clínicas.");
+            }
+        } catch (error) {
+            alert("Erro ao solicitar: " + error.message);
+        }
       }
     };
 
@@ -653,7 +689,6 @@
           const vetDisplay = data.vetName ? data.vetName : 'Nome não informado';
           const clinicDisplay = data.requestedByName ? data.requestedByName + ` (${data.requestedBy})` : data.requestedBy;
           
-          // Exibe o horário solicitado pela clínica
           const timeDisplay = data.requestedTime ? ` às ${data.requestedTime}` : '';
 
           grid.innerHTML += `
@@ -681,9 +716,11 @@
         await updateDoc(doc(db, "slots", slotId), { status: "agendamento_confirmado" });
       }
     };
+    
     window.rejectSlot = async (slotId) => {
-      if(confirm("Cancelar solicitação e devolver a data para ficar disponível na plataforma?")) {
-        await updateDoc(doc(db, "slots", slotId), { status: "disponivel", requestedBy: null, requestedByName: null, requestedTime: null });
+      if(confirm("Cancelar solicitação? O pedido será apagado (a data original do veterinário continuará livre na plataforma).")) {
+        // Como agora é um documento clone separado, basta apagá-lo da base de dados
+        await deleteDoc(doc(db, "slots", slotId));
       }
     };
   </script>
