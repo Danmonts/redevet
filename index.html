@@ -270,6 +270,10 @@
     let currentUserDataObj = null;
     let selectedRegistrationRole = 'veterinario';
     let allAvailableDocs = []; 
+    
+    // Variáveis para validar o login
+    let isExplicitLogin = false;
+    let explicitLoginRole = null;
 
     const ui = {
       authSection: document.getElementById('auth-section'),
@@ -345,6 +349,16 @@
         if (userDoc.exists()) {
           currentUserDataObj = userDoc.data();
           currentUserRole = currentUserDataObj.role;
+          
+          // Validação rigorosa de segurança no momento do Login
+          if (isExplicitLogin && explicitLoginRole !== currentUserRole) {
+            isExplicitLogin = false;
+            await signOut(auth); // Desconecta imediatamente
+            showError("Perfil incorreto! Selecione o tipo de conta correto (Veterinário, Clínica ou Admin) nas opções acima antes de clicar em Entrar.");
+            return;
+          }
+          isExplicitLogin = false; // Reset da flag
+
           updateUI(user, currentUserRole);
           
           if(currentUserRole === 'veterinario') {
@@ -442,9 +456,14 @@
       const password = document.getElementById('password').value;
       if (!email || !password) return showError("Preencha o e-mail e a palavra-passe para entrar.");
 
+      // Marca a intenção de login e o papel selecionado
+      isExplicitLogin = true;
+      explicitLoginRole = selectedRegistrationRole;
+
       try {
         await signInWithEmailAndPassword(auth, email, password);
       } catch (error) {
+        isExplicitLogin = false; // Reseta em caso de falha de password
         showError("Erro ao entrar. Verifique o e-mail e palavra-passe.");
       }
     });
@@ -531,28 +550,24 @@
         const docs = [];
         snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
         
-        // Nova Lógica de Ordenação por Prioridade
         docs.sort((a, b) => {
             const getPriority = (item) => {
-                if (item.status === 'agendamento_confirmado') return 1; // Prioridade Máxima
-                if (item.isAppointment) return 2; // Pendente de aprovação
-                return 3; // Dia Livre (disponível)
+                if (item.status === 'agendamento_confirmado') return 1; 
+                if (item.isAppointment) return 2; 
+                return 3; 
             };
 
             const priorityA = getPriority(a);
             const priorityB = getPriority(b);
 
-            // 1. Ordena pela prioridade (Confirmados no topo)
             if (priorityA !== priorityB) {
                 return priorityA - priorityB;
             }
 
-            // 2. Se a prioridade for igual, ordena por Data
             if (a.date !== b.date) {
                 return a.date.localeCompare(b.date);
             }
 
-            // 3. Se a data for igual, ordena por Hora (se existir)
             const timeA = a.requestedTime || "";
             const timeB = b.requestedTime || "";
             return timeA.localeCompare(timeB);
@@ -607,7 +622,6 @@
         allAvailableDocs = [];
         snapshot.forEach(doc => {
             const data = doc.data();
-            // Evitar que apareçam reservas perdidas ou em estados anormais
             if (!data.isAppointment) {
                 allAvailableDocs.push({ id: doc.id, ...data });
             }
@@ -662,14 +676,12 @@
         const clinicName = currentUserDataObj?.nome || "";
         
         try {
-            // Ir buscar os dados do dia disponível
             const slotRef = doc(db, "slots", slotId);
             const slotSnap = await getDoc(slotRef);
 
             if (slotSnap.exists()) {
                 const slotData = slotSnap.data();
 
-                // Criar um novo agendamento independente
                 await addDoc(collection(db, "slots"), {
                     vetId: slotData.vetId,
                     vetEmail: slotData.vetEmail,
@@ -681,7 +693,7 @@
                     requestedBy: auth.currentUser.email,
                     requestedByName: clinicName,
                     requestedTime: desiredTime,
-                    isAppointment: true // Flag importante para diferenciar do dia livre
+                    isAppointment: true 
                 });
 
                 alert("Solicitação de horário enviada ao administrador! A data original continua disponível para outras clínicas.");
@@ -711,7 +723,6 @@
           const vetDisplay = data.vetName ? data.vetName : 'Nome não informado';
           const clinicDisplay = data.requestedByName ? data.requestedByName + ` (${data.requestedBy})` : data.requestedBy;
           
-          // Exibe o horário solicitado pela clínica
           const timeDisplay = data.requestedTime ? ` às ${data.requestedTime}` : '';
 
           grid.innerHTML += `
@@ -742,7 +753,6 @@
     
     window.rejectSlot = async (slotId) => {
       if(confirm("Cancelar solicitação? O pedido será apagado (a data original do veterinário continuará livre na plataforma).")) {
-        // Como agora é um documento clone separado, basta apagá-lo da base de dados
         await deleteDoc(doc(db, "slots", slotId));
       }
     };
