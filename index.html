@@ -19,9 +19,6 @@
     .role-card.active svg {
       stroke: #0f766e;
     }
-    .hour-btn {
-      transition: all 0.15s ease;
-    }
   </style>
 </head>
 <body class="bg-slate-50 text-gray-800 font-sans min-h-screen flex flex-col">
@@ -30,7 +27,7 @@
   <nav class="bg-white border-b border-gray-200 py-2 px-4 shadow-sm sticky top-0 z-40">
     <div class="max-w-6xl mx-auto flex justify-between items-center">
       
-      <!-- Logotipo da Rede Vet (com tamanho fixo do container e escala visual) -->
+      <!-- Logotipo da Rede Vet -->
       <div class="flex items-center h-12 sm:h-14">
         <img src="logotipo.png" alt="Rede Vet Logo" class="h-full object-contain scale-[1.4] sm:scale-[1.7] origin-left">
       </div>
@@ -160,9 +157,11 @@
       <div class="col-span-1 bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100 h-fit">
         
         <div class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-          <h3 class="text-base sm:text-lg font-bold text-gray-900">Publicar Disponibilidade</h3>
+          <h3 class="text-base sm:text-lg font-bold text-gray-900">Publicar Datas</h3>
           <button class="btn-open-profile-vet text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-3 rounded-lg transition shadow-sm border border-slate-200">Meu Perfil</button>
         </div>
+
+        <p class="text-sm text-gray-500 mb-4">Selecione os dias em que está disponível. A clínica irá propor o horário exato no momento da solicitação.</p>
 
         <div class="space-y-4">
           
@@ -200,27 +199,16 @@
               <input type="date" id="vet-date-end" class="w-full border border-gray-300 p-2.5 rounded-lg mt-1 focus:ring-teal-500 focus:border-teal-500 outline-none text-sm">
             </div>
           </div>
-          
-          <div>
-            <div class="flex justify-between items-end mt-2 mb-2">
-              <label class="block text-sm font-medium text-gray-700">Horários (7h às 20h)</label>
-              <div class="space-x-2">
-                <button type="button" id="btn-sel-all" class="text-xs text-teal-600 font-bold hover:underline py-2 px-1">Todos</button>
-                <button type="button" id="btn-sel-none" class="text-xs text-gray-500 font-bold hover:underline py-2 px-1">Limpar</button>
-              </div>
-            </div>
-            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2" id="hours-container"></div>
-          </div>
 
           <button id="btn-add-slot" class="w-full bg-teal-600 text-white font-bold py-3 rounded-lg hover:bg-teal-700 transition mt-4 shadow-sm text-sm sm:text-base">
-            Publicar Horários
+            Publicar Datas
           </button>
         </div>
       </div>
       
       <!-- Lista de Publicados -->
       <div class="col-span-1 lg:col-span-2 bg-white p-4 sm:p-6 rounded-2xl shadow-sm border border-gray-100">
-        <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Meus Horários Publicados</h3>
+        <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-3">Meus Dias Publicados</h3>
         <div id="vet-slots-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
     </div>
@@ -282,45 +270,6 @@
     let currentUserDataObj = null;
     let selectedRegistrationRole = 'veterinario';
     let allAvailableDocs = []; 
-
-    // Gestão da Grade de Horários
-    let selectedHours = [];
-    const hoursList = [];
-    for(let i=7; i<=20; i++) {
-      hoursList.push(`${i.toString().padStart(2, '0')}:00`);
-    }
-
-    function renderHoursGrid() {
-      const container = document.getElementById('hours-container');
-      container.innerHTML = hoursList.map(h => {
-        const isSelected = selectedHours.includes(h);
-        const activeClasses = isSelected ? 'bg-teal-50 border-teal-500 text-teal-700 shadow-sm' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-300';
-        return `<button type="button" class="hour-btn border ${activeClasses} py-2 rounded-lg text-xs sm:text-sm font-semibold transition" data-time="${h}">${h}</button>`;
-      }).join('');
-      
-      document.querySelectorAll('.hour-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          const time = e.target.getAttribute('data-time');
-          if(selectedHours.includes(time)) {
-            selectedHours = selectedHours.filter(t => t !== time);
-          } else {
-            selectedHours.push(time);
-          }
-          renderHoursGrid();
-        });
-      });
-    }
-
-    document.getElementById('btn-sel-all').addEventListener('click', () => {
-      selectedHours = [...hoursList];
-      renderHoursGrid();
-    });
-    document.getElementById('btn-sel-none').addEventListener('click', () => {
-      selectedHours = [];
-      renderHoursGrid();
-    });
-    
-    renderHoursGrid();
 
     const ui = {
       authSection: document.getElementById('auth-section'),
@@ -413,7 +362,7 @@
       }
     });
 
-    // Lógica do Modal de Perfil para Vet e Clínica
+    // Lógica do Modal de Perfil
     const openProfileModal = () => { document.getElementById('profile-modal').classList.remove('hidden'); };
     document.querySelector('.btn-open-profile-vet').addEventListener('click', openProfileModal);
     document.querySelector('.btn-open-profile-clinic').addEventListener('click', openProfileModal);
@@ -438,10 +387,8 @@
           emailContato: contactEmail
         });
         
-        // Atualiza a variável local
         if(currentUserDataObj) currentUserDataObj.nome = name;
 
-        // Se for veterinário, atualizar automaticamente todos os horários já criados no passado com o novo nome
         if (currentUserRole === 'veterinario') {
           const qSlots = query(collection(db, "slots"), where("vetId", "==", auth.currentUser.uid));
           const snapshot = await getDocs(qSlots);
@@ -452,7 +399,7 @@
           await Promise.all(updatePromises);
         }
         
-        alert("Perfil atualizado com sucesso! Todos os seus horários refletem agora o seu novo nome.");
+        alert("Perfil atualizado com sucesso!");
         document.getElementById('profile-modal').classList.add('hidden');
       } catch(e) {
         alert("Erro ao atualizar o perfil: " + e.message);
@@ -513,18 +460,17 @@
       ui.error.classList.remove('hidden');
     }
 
-    // Veterinário
+    // Veterinário - Publicar Apenas Data
     document.getElementById('btn-add-slot').addEventListener('click', async () => {
       const crm = document.getElementById('vet-crm-post').value;
       const specialty = document.getElementById('vet-specialty').value;
       const dateStart = document.getElementById('vet-date-start').value;
       const dateEnd = document.getElementById('vet-date-end').value || dateStart;
       
-      // Capturar o nome do perfil
       const vetName = currentUserDataObj?.nome || "";
 
-      if(!crm || !specialty || !dateStart || selectedHours.length === 0) {
-        return alert("Preencha a especialidade, a data inicial e selecione pelo menos um horário.");
+      if(!crm || !specialty || !dateStart) {
+        return alert("Preencha a especialidade e a data inicial.");
       }
       if (dateStart > dateEnd) {
         return alert("A data final não pode ser anterior à data inicial.");
@@ -550,24 +496,23 @@
 
         const promises = [];
         datesToGenerate.forEach(date => {
-          selectedHours.forEach(time => {
             promises.push(addDoc(collection(db, "slots"), {
               vetId: auth.currentUser.uid, 
               vetEmail: auth.currentUser.email,
               vetName: vetName,
-              crm, specialty, date, time, status: "disponivel"
+              crm, 
+              specialty, 
+              date, 
+              status: "disponivel"
             }));
-          });
         });
 
         await Promise.all(promises);
-        alert(`${promises.length} horário(s) publicado(s)!`);
+        alert(`${promises.length} dia(s) publicado(s)! As clínicas já podem propor horários.`);
         
         document.getElementById('vet-specialty').value = '';
         document.getElementById('vet-date-start').value = '';
         document.getElementById('vet-date-end').value = '';
-        selectedHours = [];
-        renderHoursGrid();
 
       } catch(e) {
         alert("Erro ao publicar: " + e.message);
@@ -585,19 +530,22 @@
         
         const docs = [];
         snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
-        docs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        docs.sort((a, b) => a.date.localeCompare(b.date));
 
         docs.forEach((data) => {
+          // Se já houver um horário solicitado pela clínica, mostra-o
+          const timeDisplay = data.requestedTime ? ` <span class="text-gray-400">às</span> <span class="font-bold text-teal-700">${data.requestedTime}</span>` : '';
+          
           list.innerHTML += `
             <div class="border border-gray-100 p-3 sm:p-4 rounded-xl bg-gray-50 flex justify-between items-center transition hover:shadow-sm">
               <div>
                 <p class="font-bold text-teal-800 text-sm">${data.specialty}</p>
-                <p class="text-gray-700 mt-1 font-medium text-sm">${data.date} <span class="text-gray-400">às</span> ${data.time}</p>
+                <p class="text-gray-700 mt-1 font-medium text-sm">${data.date}${timeDisplay}</p>
                 <p class="text-xs mt-2 font-bold uppercase ${data.status === 'disponivel' ? 'text-teal-600 bg-teal-50' : 'text-orange-600 bg-orange-50'} px-2 py-1 rounded w-fit">
                   ${data.status.replace('_', ' ')}
                 </p>
               </div>
-              <button onclick="deleteSlot('${data.id}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-lg transition" title="Excluir horário">
+              <button onclick="deleteSlot('${data.id}')" class="text-red-400 hover:text-red-600 hover:bg-red-50 p-2.5 rounded-lg transition" title="Excluir data">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
@@ -609,7 +557,7 @@
     }
 
     window.deleteSlot = async (slotId) => {
-      if(confirm("Deseja excluir este horário? A ação não pode ser desfeita.")) {
+      if(confirm("Deseja excluir esta data? A ação não pode ser desfeita.")) {
         try {
           await deleteDoc(doc(db, "slots", slotId));
         } catch (e) {
@@ -643,7 +591,7 @@
         return true;
       });
 
-      filteredDocs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+      filteredDocs.sort((a, b) => a.date.localeCompare(b.date));
 
       if (filteredDocs.length === 0) {
         grid.innerHTML = '<p class="text-gray-500 col-span-3 text-center mt-4 text-sm sm:text-base">Nenhum especialista encontrado para os filtros.</p>';
@@ -651,33 +599,38 @@
       }
 
       filteredDocs.forEach((data) => {
-        // Mostra apenas o Nome do Veterinário se existir, senão mostra 'Nome não informado'
         const displayName = data.vetName ? data.vetName : 'Nome não informado';
 
         grid.innerHTML += `
-          <div class="border border-gray-100 p-5 sm:p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition">
-            <p class="font-bold text-lg sm:text-xl text-gray-900">${data.specialty}</p>
-            <p class="text-sm font-medium text-gray-700 mt-1 line-clamp-1" title="${displayName}">${displayName}</p>
-            <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">CRMV: ${data.crm}</p>
-            <div class="bg-slate-50 border border-slate-100 text-slate-700 p-3 rounded-xl text-center font-medium mb-4 sm:mb-5 text-sm sm:text-base">
-              ${data.date} • ${data.time}
+          <div class="border border-gray-100 p-5 sm:p-6 rounded-2xl bg-white shadow-sm hover:shadow-md transition flex flex-col h-full">
+            <div class="flex-1">
+              <p class="font-bold text-lg sm:text-xl text-gray-900">${data.specialty}</p>
+              <p class="text-sm font-medium text-gray-700 mt-1 line-clamp-1" title="${displayName}">${displayName}</p>
+              <p class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">CRMV: ${data.crm}</p>
+              <div class="bg-slate-50 border border-slate-100 text-slate-700 p-3 rounded-xl text-center font-medium mb-4 sm:mb-5 text-sm sm:text-base">
+                Disponível dia: ${data.date}
+              </div>
             </div>
-            <button onclick="requestSlot('${data.id}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 sm:py-3 rounded-xl transition text-sm sm:text-base">Solicitar Especialista</button>
+            <button onclick="requestSlot('${data.id}')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 sm:py-3 rounded-xl transition text-sm sm:text-base mt-auto">Solicitar Horário</button>
           </div>
         `;
       });
     }
 
     window.requestSlot = async (slotId) => {
-      if(confirm("Solicitar este profissional? Nossa equipa entrará em contacto.")) {
+      // Nova etapa: A clínica escolhe o horário desejado
+      const desiredTime = prompt("Qual horário deseja solicitar para este dia? (Ex: 14:30)");
+      
+      if (desiredTime && desiredTime.trim() !== "") {
         const clinicName = currentUserDataObj?.nome || "";
         
         await updateDoc(doc(db, "slots", slotId), {
           status: "pendente_aprovacao", 
           requestedBy: auth.currentUser.email,
-          requestedByName: clinicName
+          requestedByName: clinicName,
+          requestedTime: desiredTime // Salva o horário proposto pela clínica
         });
-        alert("Solicitação enviada ao administrador!");
+        alert("Solicitação de horário enviada ao administrador!");
       }
     };
 
@@ -694,13 +647,15 @@
         
         const docs = [];
         snapshot.forEach(doc => docs.push({ id: doc.id, ...doc.data() }));
-        docs.sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
+        docs.sort((a, b) => a.date.localeCompare(b.date));
 
         docs.forEach((data) => {
-          // Mostra apenas o Nome do Veterinário se existir, senão mostra 'Nome não informado'
           const vetDisplay = data.vetName ? data.vetName : 'Nome não informado';
           const clinicDisplay = data.requestedByName ? data.requestedByName + ` (${data.requestedBy})` : data.requestedBy;
           
+          // Exibe o horário solicitado pela clínica
+          const timeDisplay = data.requestedTime ? ` às ${data.requestedTime}` : '';
+
           grid.innerHTML += `
             <div class="border border-orange-200 p-4 sm:p-5 rounded-2xl bg-orange-50 shadow-sm flex flex-col justify-between">
               <div>
@@ -708,7 +663,7 @@
                 <p class="text-xs sm:text-sm text-gray-700 mt-1">Prof: <b>${vetDisplay}</b> (CRMV: ${data.crm})</p>
                 <p class="text-xs sm:text-sm text-gray-700 mb-3">Clínica: <span class="font-bold text-teal-800">${clinicDisplay}</span></p>
                 <div class="bg-white border border-gray-200 text-slate-700 p-2 rounded-lg text-center font-medium mb-4 text-xs sm:text-sm">
-                  ${data.date} às ${data.time}
+                  Data proposta: ${data.date}${timeDisplay}
                 </div>
               </div>
               <div class="flex gap-2">
@@ -722,13 +677,13 @@
     }
 
     window.approveSlot = async (slotId) => {
-      if(confirm("Confirmar agendamento definitivamente?")) {
+      if(confirm("Confirmar este horário definitivamente?")) {
         await updateDoc(doc(db, "slots", slotId), { status: "agendamento_confirmado" });
       }
     };
     window.rejectSlot = async (slotId) => {
-      if(confirm("Cancelar solicitação e devolver horário para a clínica?")) {
-        await updateDoc(doc(db, "slots", slotId), { status: "disponivel", requestedBy: null, requestedByName: null });
+      if(confirm("Cancelar solicitação e devolver a data para ficar disponível na plataforma?")) {
+        await updateDoc(doc(db, "slots", slotId), { status: "disponivel", requestedBy: null, requestedByName: null, requestedTime: null });
       }
     };
   </script>
