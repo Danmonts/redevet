@@ -1,0 +1,16 @@
+{
+  "name": "Rede Vet",
+  "short_name": "Rede Vet",
+  "start_url": "/redevet/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f766e",
+  "description": "Plataforma de conexão entre Clínicas e Veterinários Especialistas.",
+  "icons": [
+    {
+      "src": "logotipo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
